@@ -9,7 +9,7 @@ import org.betastudio.ftc.interfaces.ThreadAdditions;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Global;
 
-public class BranchThreadClient extends TelemetryClient implements ThreadAdditions {
+public class BranchThreadClient extends BaseMapClient implements ThreadAdditions {
 	private static  boolean auto_start_updater = true;
 	protected final Action  updateAction;
 	protected final Thread  updateThread;
@@ -48,5 +48,10 @@ public class BranchThreadClient extends TelemetryClient implements ThreadAdditio
 	public void closeTask() {
 		assert updateAction instanceof ThreadAdditions;
 		((ThreadAdditions) updateAction).closeTask();
+	}
+
+	@Override
+	public boolean isUpdateRequested() {
+		return false;
 	}
 }

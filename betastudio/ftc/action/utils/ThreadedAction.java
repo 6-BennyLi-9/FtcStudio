@@ -1,13 +1,15 @@
 package org.betastudio.ftc.action.utils;
 
 
+import androidx.annotation.NonNull;
+
 import org.betastudio.ftc.action.Action;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 多线程的 {@code Action} 块，对 {@code tps} 要求较高
@@ -27,7 +29,7 @@ public final class ThreadedAction implements Action {
 	@Override
 	public boolean run() {
 		if (actions.isEmpty()) return false;
-		final Set <Action> removes = new HashSet <>();
+		final Collection <Action> removes = new HashSet <>();
 		for (final Action action : actions) {
 			if (! action.run()) {
 				removes.add(action);
@@ -38,6 +40,7 @@ public final class ThreadedAction implements Action {
 	}
 
 
+	@NonNull
 	@Override
 	public String paramsString() {
 		final StringBuilder stringBuilder = new StringBuilder("{");

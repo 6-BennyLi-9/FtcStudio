@@ -5,10 +5,16 @@ import androidx.annotation.NonNull;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.betastudio.ftc.action.Action;
+import org.betastudio.ftc.interfaces.DashboardCallable;
+import org.betastudio.ftc.telemetry.TelemetryItem;
+import org.firstinspires.ftc.teamcode.message.TelemetryMessage;
 
 import java.util.Locale;
 
-public class ServoCtrl implements Action {
+/**
+ * 通用的舵机控制类
+ */
+public class ServoCtrl implements Action, DashboardCallable {
 	public final Servo  controlTarget;
 	private      double targetPosition;
 	private      String tag;
@@ -39,7 +45,7 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param tolerance      最大更改量
@@ -53,7 +59,7 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param smoothVal      关于调控量的因数
@@ -63,17 +69,17 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param smoothVal      关于调控量的因数
-	 * @param minControlVal  最小调整数
+	 * @param tolerance      最小调整数
 	 */
-	public void setTargetPositionSmooth(final double targetPosition, final double smoothVal, final double minControlVal) {
-		if (Math.abs(targetPosition - this.targetPosition) <= minControlVal) {
+	public void setTargetPositionSmooth(final double targetPosition, final double smoothVal, final double tolerance) {
+		if (Math.abs(targetPosition - this.targetPosition) <= tolerance) {
 			this.targetPosition = targetPosition;
 		} else {
-			changeTargetPositionBy(Math.max((targetPosition - this.targetPosition) * smoothVal, minControlVal));
+			changeTargetPositionBy(Math.max(Math.abs(targetPosition - this.targetPosition) * smoothVal, tolerance) * Math.signum(targetPosition - this.targetPosition));
 		}
 	}
 
@@ -82,7 +88,7 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param tolerance      最大更改量
@@ -92,7 +98,7 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param smoothVal      关于调控量的因数
@@ -102,7 +108,7 @@ public class ServoCtrl implements Action {
 	}
 
 	/**
-	 * 不能一步到位，需要重复调试
+	 * 不能一步到位，需要重复调用
 	 *
 	 * @param targetPosition 目标点位
 	 * @param smoothVal      关于调控量的因数
@@ -123,5 +129,10 @@ public class ServoCtrl implements Action {
 
 	public void setTag(final String tag) {
 		this.tag = tag;
+	}
+
+	@Override
+	public void process(@NonNull final TelemetryMessage messageOverride) {
+		messageOverride.add(new TelemetryItem(tag+"-target",targetPosition));
 	}
 }

@@ -2,11 +2,18 @@ package org.betastudio.ftc.client;
 
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 
+import org.betastudio.ftc.dashboard.DashTelemetry;
+import org.betastudio.ftc.telemetry.TelemetryElement;
+import org.betastudio.ftc.telemetry.TelemetryItem;
+import org.betastudio.ftc.telemetry.TelemetryLine;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Global;
 import org.firstinspires.ftc.teamcode.Timer;
+import org.firstinspires.ftc.teamcode.message.TelemetryMessage;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -18,11 +25,11 @@ import java.util.Vector;
  * @noinspection UnusedReturnValue
  */
 @Config
-public class TelemetryClient implements Client {
+public class BaseMapClient implements Client {
 	public static  ViewMode viewMode;
 	public static  boolean  sortDataInTelemetryClientUpdate = true;
 	public static  boolean  debug_mode;
-	private static Client   instanceClient;
+	private boolean isUpdateRequested;
 
 	static {
 		viewMode = ViewMode.BASIC_TELEMETRY;
@@ -34,24 +41,16 @@ public class TelemetryClient implements Client {
 	protected       int                                  ID;
 	private         boolean                              autoUpdate;
 
-	public TelemetryClient(final Telemetry telemetry) {
+	public BaseMapClient(final Telemetry telemetry) {
 		this.telemetry = telemetry;
 		this.data = new HashMap <>();
-		instanceClient = this;
 		lstUpdateTimer.restart();
-	}
-
-	public static Client getInstance() {
-		return instanceClient;
-	}
-
-	public static void constructInstance(final Telemetry telemetry) {
-		instanceClient = new TelemetryClient(telemetry);
 	}
 
 	@Override
 	public void clear() {
 		this.data.clear();
+		isUpdateRequested=true;
 		if (autoUpdate) {
 			this.update();
 		}
@@ -68,6 +67,7 @@ public class TelemetryClient implements Client {
 			this.update();
 		}
 
+		isUpdateRequested=true;
 		return this;
 	}
 
@@ -89,6 +89,7 @@ public class TelemetryClient implements Client {
 			this.update();
 		}
 
+		isUpdateRequested=true;
 		return this;
 	}
 
@@ -106,6 +107,7 @@ public class TelemetryClient implements Client {
 			this.update();
 		}
 
+		isUpdateRequested=true;
 		return this;
 	}
 
@@ -125,6 +127,7 @@ public class TelemetryClient implements Client {
 			this.update();
 		}
 
+		isUpdateRequested=true;
 		return this;
 	}
 
@@ -143,6 +146,8 @@ public class TelemetryClient implements Client {
 		if (autoUpdate) {
 			this.update();
 		}
+
+		isUpdateRequested=true;
 		return this;
 	}
 
@@ -161,34 +166,35 @@ public class TelemetryClient implements Client {
 			this.update();
 		}
 
+		isUpdateRequested=true;
 		return this;
 	}
 
 	@Override
-	public Client speak(String text) {
+	public Client speak(final String text) {
 		try {
 			telemetry.speak(text);
-		} catch (UnsupportedOperationException ignored) {
+		} catch (final UnsupportedOperationException ignored) {
 		}
 		return this;
 	}
 
 	@Override
-	public Client speak(String text, String languageCode, String countryCode) {
+	public Client speak(final String text, final String languageCode, final String countryCode) {
 		try {
 			telemetry.speak(text, languageCode, countryCode);
-		} catch (UnsupportedOperationException ignored) {
+		} catch (final UnsupportedOperationException ignored) {
 		}
 		return this;
 	}
 
 	@Override
-	public void configViewMode(ViewMode viewMode) {
-		TelemetryClient.viewMode = viewMode;
+	public void configViewMode(final ViewMode viewMode) {
+		BaseMapClient.viewMode = viewMode;
 	}
 
 	@Override
-	public void setAutoUpdate(boolean autoUpdate) {
+	public void setAutoUpdate(final boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
 	}
 
@@ -199,11 +205,13 @@ public class TelemetryClient implements Client {
 
 	@Override
 	public void update() {
+		telemetry.clearAll();
 		if (debug_mode) {
 			telemetry.addData("Update Delta Time", lstUpdateTimer.restartAndGetDeltaTime());
 		}
 		telemetry.addData("ViewMode", viewMode.name());
 		telemetry.addData("Status", Global.runMode);
+		telemetry.addLine(">>>>>>>>>>>>>>>>>>>");
 
 		switch (viewMode) {
 			case BASIC_TELEMETRY:
@@ -213,20 +221,25 @@ public class TelemetryClient implements Client {
 				updateThreadLines();
 				break;
 			case LOG:
-				throw new UnsupportedOperationException("TelemetryClient doesn't support log view now!");
+				throw new UnsupportedOperationException("BaseMapClient doesn't support log view now!");
 		}
 	}
 
-	protected synchronized void updateThreadLines() {
-		for (Map.Entry <String, Thread> entry : Global.threadManager.getMem().entrySet()) {
-			String key   = entry.getKey();
-			Thread value = entry.getValue();
+	@Override
+	public boolean isUpdateRequested() {
+		return isUpdateRequested;
+	}
+
+	protected void updateThreadLines() {
+		for (final Map.Entry <String, Thread> entry : Global.threadManager.getMem().entrySet()) {
+			final String key   = entry.getKey();
+			final Thread value = entry.getValue();
 			telemetry.addData(key, value);
 		}
 		this.telemetry.update();
 	}
 
-	protected synchronized void updateTelemetryLines() {
+	protected void updateTelemetryLines() {
 		if (sortDataInTelemetryClientUpdate) {
 			final Vector <Pair <Integer, Pair <String, String>>> outputData = new Vector <>();
 			for (final Map.Entry <String, Pair <String, Integer>> i : this.data.entrySet()) {
@@ -242,9 +255,9 @@ public class TelemetryClient implements Client {
 			outputData.sort(Comparator.comparingInt(x -> x.first));
 
 			for (int i = 0 ; i < outputData.size() ; i++) {
-				Pair <Integer, Pair <String, String>> outputLine = outputData.get(i);
+				final Pair <Integer, Pair <String, String>> outputLine = outputData.get(i);
 				if (debug_mode) {
-					String packedID = "[" + outputLine.first + "]";
+					final String packedID = "[" + outputLine.first + "]";
 					if (telemetry instanceof DashTelemetry) {
 						((DashTelemetry) telemetry).addSmartLine(packedID + outputLine.second.first, outputLine.second.second);
 					} else {
@@ -284,11 +297,14 @@ public class TelemetryClient implements Client {
 		}
 	}
 
-	//	public void debug_mode(final boolean debug_mode) {
-	//		TelemetryClient.debug_mode = debug_mode;
-	//	}
-	//
-	//	public boolean debug_mode() {
-	//		return TelemetryClient.debug_mode;
-	//	}
+	@Override
+	public void sendRequest(@NonNull final TelemetryMessage message) {
+		for (final TelemetryElement element : message.elements) {
+			if (element instanceof TelemetryLine) {
+				addLine(((TelemetryLine) element).line);
+			} else if (element instanceof TelemetryItem) {
+				addData(((TelemetryItem) element).capital, ((TelemetryItem) element).value);
+			}
+		}
+	}
 }

@@ -11,10 +11,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-import org.betastudio.ftc.action.Actions;
-import org.betastudio.ftc.action.utils.SleepingAction;
-import org.betastudio.ftc.client.TelemetryClient;
-
 public final class HardwareDatabase {
 	public static DcMotorEx   leftFront;
 	public static DcMotorEx   leftRear;
@@ -96,7 +92,7 @@ public final class HardwareDatabase {
 			parameters.loggingTag = "IMU";
 			parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 			//延时0.5秒，以确保imu正常工作
-			Actions.runAction(new SleepingAction(500));
+			Local.sleep(500);
 			imu.initialize(parameters);
 		}
 	}
@@ -113,13 +109,5 @@ public final class HardwareDatabase {
 		leftRear.setDirection(DcMotorSimple.Direction.REVERSE);    //R
 		rightFront.setDirection(DcMotorSimple.Direction.FORWARD);  //F
 		rightRear.setDirection(DcMotorSimple.Direction.FORWARD);   //R
-	}
-
-	public static void printVoltages() {
-		TelemetryClient.getInstance().changeData("leftFront voltage", getHardwareVoltage("leftFront")).changeData("leftRear voltage", getHardwareVoltage("leftRear")).changeData("rightFront voltage", getHardwareVoltage("rightFront")).changeData("rightRear voltage", getHardwareVoltage("rightRear")).changeData("clip voltage", getHardwareVoltage("clip")).changeData("place voltage", getHardwareVoltage("place")).changeData("claw voltage", getHardwareVoltage("claw")).changeData("rotate voltage", getHardwareVoltage("rotate"));
-	}
-
-	private static double getHardwareVoltage(final String name) {
-		return hardwareMap.voltageSensor.get(name).getVoltage();
 	}
 }

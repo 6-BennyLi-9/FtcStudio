@@ -10,6 +10,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.cores.pid.PidProcessor;
 import org.firstinspires.ftc.teamcode.HardwareDatabase;
 
+/**
+ * 电梯的控制器
+ * <p>
+ * 这个类定义了电梯的控制方式，包括电梯的各种控制方式，包括电梯的PID控制，电梯的线性函数控制，电梯的二次函数控制，电梯的电容控制等等。
+ * <p>
+ * 任何参数调试，可以修改 {@code public static ...} 的相关内容。
+ */
 public class LiftControllers {
 	/**
 	 * 经典的电梯控制，人走码还在
@@ -76,19 +83,13 @@ public class LiftControllers {
 		public boolean run() {
 			currentPosition = targetLift.getCurrentPosition();
 
+			//特殊处理目标值为0的情况
 			if (0 == getTargetPosition() && using_touch_calibrate) {
 				targetLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 				targetLift.setPower(! HardwareDatabase.liftTouch.isPressed() ? 0 : - 1);
 				if (! HardwareDatabase.liftTouch.isPressed()) {
 					targetLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 				}
-				return true;
-			}
-
-			if (0 == getTargetPosition() && using_touch_reset_encoders && ! HardwareDatabase.liftTouch.isPressed()) {
-				targetLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-				targetLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-				targetLift.setPower(0);
 				return true;
 			}
 
@@ -117,7 +118,6 @@ public class LiftControllers {
 			return using_touch_calibrate;
 		}
 
-
 		public void using_touch_reset_encoders(final boolean using_touch_reset_encoders) {
 			this.using_touch_reset_encoders = using_touch_reset_encoders;
 		}
@@ -139,7 +139,7 @@ public class LiftControllers {
 			vA = 0.05;
 		}
 
-		private       double calibrateVal;
+		private double calibrateVal;
 
 		public LinFuncLiftCtrl(@NonNull final DcMotorEx target) {
 			super(target);
@@ -170,7 +170,7 @@ public class LiftControllers {
 	@Config
 	@Disabled
 	public static class PIDLiftCtrl extends LiftCtrl {
-		public static double       vP, vI, vD, max_I;
+		public static double vP, vI, vD, max_I;
 
 		static {
 			vP = 1;
@@ -214,7 +214,7 @@ public class LiftControllers {
 			vA = 0.02;
 		}
 
-		private       double calibrateVal;
+		private double calibrateVal;
 
 		public QuadFuncLiftCtrl(@NonNull final DcMotorEx target) {
 			super(target);
