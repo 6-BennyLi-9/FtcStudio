@@ -1,5 +1,8 @@
-*.*
+# 忽略所有文件和目录
+/*
+!/.gitignore
 
+# 保留指定的子目录
 !acmerobotics/
 !betastudio/
 !firstinspires/ftc/teamcode/
